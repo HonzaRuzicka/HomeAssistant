@@ -42,7 +42,6 @@ tinySHT2x sht;
 
 uint32_t delayMS;
 float lastTemp = 0;
-float lastHum = 0;
 float rozdilTemp;
 float rozdilHum;
 int forceUpdateTemp; //hodnota pro poslání hodnoty když není změna víc jak 5 minut
@@ -103,18 +102,8 @@ void loop()
       forceUpdateTemp = 0;
   }
   
-  if (forceUpdateHum < FORCE_UPDATE_N_READS){
-    rozdilHum = humidity - lastHum;
-    if (rozdilHum < 0) {rozdilHum = rozdilHum * -1;}
-    if (rozdilHum > 1) {
-      send(msgHum.set(humidity + SENSOR_HUM_OFFSET, 1));
-      lastHum = humidity;
-      forceUpdateHum = 0;
-    }
-  }
-  else{
+  if (forceUpdateHum = FORCE_UPDATE_N_READS){
     send(msgHum.set(humidity + SENSOR_HUM_OFFSET, 1));
-    lastHum = humidity;
     forceUpdateHum = 0;
   }
   

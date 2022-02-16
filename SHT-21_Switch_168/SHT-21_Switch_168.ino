@@ -1,4 +1,4 @@
-#define SN "Topeni-Teplota-168"
+#define SN "TopeniSwitch-Teplota-168"
 #define SV "1.0"
 // Enable and select radio type attached 
 #define MY_RADIO_RF24
@@ -21,15 +21,14 @@ static const uint8_t FORCE_UPDATE_N_READS = 40;
 
 #define CHILD_ID_HUM 20
 #define CHILD_ID_TEMP 21
-#define CHILD_ID_HEATINDEX 22
-#define CHILD_ID_TOPENI 24
+#define CHILD_ID_TOPENI 22
 
 // Set this offset if the sensors have permanent small offsets to the real temperatures/humidity.
 // In Celsius degrees or moisture percent
 #define SENSOR_HUM_OFFSET 0       // used for temperature data and heat index computation
 #define SENSOR_TEMP_OFFSET 0      // used for humidity data
 
-#define RELAY_PIN 3  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
+#define RELAY_PIN 3  // Arduino Digital I/O pin number
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 
@@ -43,7 +42,6 @@ tinySHT2x sht;
 uint32_t delayMS;
 float lastTemp = 0;
 float rozdilTemp;
-float rozdilHum;
 int forceUpdateTemp; //hodnota pro poslání hodnoty když není změna víc jak 5 minut
 int forceUpdateHum;
 float temperature;

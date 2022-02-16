@@ -1,9 +1,7 @@
-#define SN "Topeni-Teplota"
+#define SN "TopeniLight-Teplota-168"
 #define SV "1.0"
 // Enable and select radio type attached 
 #define MY_RADIO_RF24
-
-//#define MY_DEBUG
 
 //Uncomment (and update) if you want to force Node Id
 //#define MY_NODE_ID 101
@@ -16,11 +14,11 @@
 // Sleep time between sensor updates (in milliseconds) to add to sensor delay (read from sensor data; typically: 1s)
 static const uint64_t UPDATE_INTERVAL = 6000; 
 
-static const uint8_t FORCE_UPDATE_N_READS = 10;
+static const uint8_t FORCE_UPDATE_N_READS = 40;
 
 #define CHILD_ID_HUM 20
 #define CHILD_ID_TEMP 21
-#define CHILD_ID_TOPENI 24
+#define CHILD_ID_TOPENI 22
 
 // Set this offset if the sensors have permanent small offsets to the real temperatures/humidity.
 // In Celsius degrees or moisture percent
@@ -31,7 +29,6 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 
 // used libraries: they have to be installed by Arduino IDE (menu path: tools - manage libraries)
 #include <MySensors.h>  // *MySensors* by The MySensors Team (tested on version 2.3.2)
-//#include <Adafruit_Sensor.h> // Official "Adafruit Unified Sensor" by Adafruit (tested on version 1.1.1)
 #include "Wire.h"
 #include "tinySHT2x.h"
 
@@ -39,11 +36,10 @@ tinySHT2x sht;
 
 uint32_t delayMS;
 float lastTemp = 0;
-float lastHum = 0;
 float rozdilTemp;
-float rozdilHum;
-uint8_t nNoUpdates = FORCE_UPDATE_N_READS; // send data on start-up 
-bool metric = true;
+int forceUpdateTemp; //hodnota pro poslání hodnoty když není změna víc jak 5 minut
+int forceUpdateHum;
+int forceUpdateLight;
 float temperature;
 float humidity;
 int oldValue=-1;
@@ -77,37 +73,45 @@ void loop()
   
   temperature = sht.getTemperature();
   humidity = sht.getHumidity();
-  
-  /*Serial.println("--------------");
-  Serial.println(sht.getTemperature());
-  Serial.println(temperature);
-  Serial.println(humidity);
-  */
-  rozdilTemp = temperature - lastTemp;
-  if (rozdilTemp <0) {rozdilTemp * -1;}
-  if (rozdilTemp > 1) {
+
+  if (forceUpdateTemp < FORCE_UPDATE_N_READS){
+    rozdilTemp = temperature - lastTemp;
+    if (rozdilTemp < 0) {rozdilTemp = rozdilTemp * -1;}
+    if (rozdilTemp > 0.25) {
+      send(msgTemp.set(temperature + SENSOR_TEMP_OFFSET, 1));
+      lastTemp = temperature;
+      forceUpdateTemp = 0;
+    }
+  }
+  else {
     send(msgTemp.set(temperature + SENSOR_TEMP_OFFSET, 1));
-    lastTemp = temperature;
+      lastTemp = temperature;
+      forceUpdateTemp = 0;
   }
-
-  rozdilHum = humidity - lastHum;
-  if (rozdilHum <0) {rozdilHum * -1;}
-  if (rozdilHum > 1) {
+  
+  if (forceUpdateHum = FORCE_UPDATE_N_READS){
     send(msgHum.set(humidity + SENSOR_HUM_OFFSET, 1));
-    lastHum = humidity;
+    forceUpdateHum = 0;
   }
 
-  // Get the update value
   int value = digitalRead(LIGHTPIN);
-  Serial.println(value);
-  if (value != oldValue) {
+  if(forceUpdateLight < FORCE_UPDATE_N_READS) {
+    if (value != oldValue) {
      send(msgLight.set(value==HIGH ? 0 : 1));
      oldValue = value;
+     forceUpdateLight = 0;
+    }
   }
-
-  nNoUpdates++;
+  else {
+    send(msgLight.set(value==HIGH ? 0 : 1));
+    oldValue = value;
+    forceUpdateLight = 0;
+  }
+  
 
   wait(300); // waiting for potential presentation requests
-  sleep(UPDATE_INTERVAL); 
-
+  sleep(UPDATE_INTERVAL);
+  forceUpdateTemp++;
+  forceUpdateHum++;
+  forceUpdateLight++;
 }

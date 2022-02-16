@@ -89,8 +89,8 @@
 
 #include <MySensors.h>
 
-#define SN "TempHumFeel"
-#define SV "2.2"
+#define SN "SerialGateway-Mega-TempHum"
+#define SV "2.3"
 
 // Enable and select radio type attached 
 #define MY_RADIO_RF24

@@ -82,11 +82,6 @@ void loop()
   temperature = sht.getTemperature();
   humidity = sht.getHumidity();
   
-  /*
-  Serial.println("--------------");
-  Serial.println(temperature);
-  */
-  //Serial.println(forceUpdateTemp);
   if (forceUpdateTemp < FORCE_UPDATE_N_READS){
     rozdilTemp = temperature - lastTemp;
     if (rozdilTemp < 0) {rozdilTemp = rozdilTemp * -1;}

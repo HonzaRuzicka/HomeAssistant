@@ -1,0 +1,5 @@
+{
+    "sketch": "SHT-21_Switch_168\\SHT-21_Switch_168.ino",
+    "configuration": "cpu=16MHzatmega328",
+    "board": "arduino:avr:pro"
+}

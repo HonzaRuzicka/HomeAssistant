@@ -11,9 +11,6 @@
 
 #define MY_BAUD_RATE 38400 
 
-// Set light PIN
-#define LIGHTPIN 4
-
 // Sleep time between sensor updates (in milliseconds) to add to sensor delay (read from sensor data; typically: 1s)
 static const uint64_t UPDATE_INTERVAL = 6000; 
 
@@ -65,8 +62,7 @@ void presentation()
 
 void setup()
 {
-  sht.begin();
-  pinMode(LIGHTPIN, INPUT); //nastavení pin senzoru 
+  sht.begin(); //inicializace teploměru
   delayMS = 1000;
   //set relay
   pinMode(RELAY_PIN, OUTPUT);

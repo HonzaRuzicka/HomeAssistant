@@ -9,4 +9,4 @@ Připojení čidla na doutnavku mi přišlo jak jedno z nejjednodušších řeš
 je přiložena
 
 obrázek je z tesování, až budou hezčí data obrázek vyněním
-  ![Photo](./media/pic1.png)
+  ![Photo](./media/pic.png)

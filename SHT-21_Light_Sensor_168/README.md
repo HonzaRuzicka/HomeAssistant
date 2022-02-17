@@ -8,5 +8,5 @@ Připojení čidla na doutnavku mi přišlo jak jedno z nejjednodušších řeš
 # Konfigurace configuration.yaml pro HomeAssistant
 je přiložena
 
-obrázek je z tesování, až budou hezčí data obrázek vyněním
+obrázek je z tesování, až budou hezčí data obrázek vyněním (topení je světlo při testování)
   ![Photo](./media/pic.png)

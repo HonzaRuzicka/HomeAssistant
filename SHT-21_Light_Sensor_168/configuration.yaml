@@ -1,0 +1,35 @@
+sensor:
+  # Sensor pro statistiku času zapnutého světla
+  - platform: history_stats
+    name: Topení zapnuto
+    entity_id: switch.topeni
+    state: "on"
+    type: time
+    start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+    end: "{{ now() }}"
+
+  #Spotřeba energie
+  - platform: template
+    sensors:
+      topeni_dole_power:
+        friendly_name: "Topení dole - power"
+        unit_of_measurement: "W"
+        value_template: >
+          {% if is_state('switch.topeni', 'on') %}
+            2880
+          {% else %}
+            0
+          {% endif %}
+  - platform: integration
+    source: sensor.topeni_dole_power
+    name: topeni_dole_energy
+    unit_prefix: k
+    round: 4
+
+utility_meter:
+  topeni_dole_daily_energy:
+    source: sensor.topeni_dole_energy
+    cycle: daily
+  topeni_dole_monthly_energy:
+    source: sensor.topeni_dole_energy
+    cycle: monthly

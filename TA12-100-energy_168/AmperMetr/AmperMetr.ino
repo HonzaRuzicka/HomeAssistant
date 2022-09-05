@@ -1,5 +1,5 @@
 #define SN "Ampermetr"
-#define SV "0.1"
+#define SV "0.2-31"
 // Enable and select radio type attached 
 #define MY_RADIO_RF24
 
@@ -19,7 +19,7 @@ static const uint64_t UPDATE_INTERVAL = 6000;
 
 static const uint8_t FORCE_UPDATE_N_READS = 40;
 
-#define CHILD_ID_AMP 30
+#define CHILD_ID_AMP 31
 #define SENSOR_S_POWER 0
 
 // used libraries: they have to be installed by Arduino IDE (menu path: tools - manage libraries)

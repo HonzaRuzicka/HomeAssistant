@@ -1,5 +1,5 @@
-#define SN "Proud-168"
-#define SV "0.1"
+#define SN "Proud-328"
+#define SV "0.2-23"
 // Enable and select radio type attached 
 #define MY_RADIO_RF24
 
@@ -13,7 +13,7 @@ static const uint64_t UPDATE_INTERVAL = 6000;
 
 static const uint8_t FORCE_UPDATE_N_READS = 40;
 
-#define CHILD_ID_PROUD 22
+#define CHILD_ID_PROUD 23
 
 #define SENSOR_CURRENT 0 
 

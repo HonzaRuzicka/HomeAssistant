@@ -1,5 +1,5 @@
 #define SN "Ampermetr"
-#define SV "0.2-31"
+#define SV "0.2-21"
 // Enable and select radio type attached 
 #define MY_RADIO_RF24
 
@@ -19,7 +19,7 @@ static const uint64_t UPDATE_INTERVAL = 6000;
 
 static const uint8_t FORCE_UPDATE_N_READS = 40;
 
-#define CHILD_ID_AMP 31
+#define CHILD_ID_AMP 21
 #define SENSOR_S_POWER 0
 
 // used libraries: they have to be installed by Arduino IDE (menu path: tools - manage libraries)
@@ -55,7 +55,7 @@ void loop()
   ADCSRA = 0x87;  // turn on adc, adc-freq = 1/128 of CPU ; keep in min: adc converseion takes 13 ADC clock cycles
   
   if (i == 0)
-  { ADMUX = 0X40;}  // internal 5V reference // PORT-40=A0 41=A1 42=A2, .....
+  { ADMUX = 0X41;}  // internal 5V reference // PORT-40=A0 41=A1 42=A2, .....
   /*else if(i == 1)
   { ADMUX = 0X41;}
   else if(i == 2)

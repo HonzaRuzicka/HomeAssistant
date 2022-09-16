@@ -37,7 +37,7 @@
 */
 
 // Enable debug prints to serial monitor
-// #define MY_DEBUG
+//#define MY_DEBUG
 
 
 // Enable and select radio type attached
@@ -77,6 +77,9 @@
 // Inverses the behavior of leds
 #define MY_WITH_LEDS_BLINKING_INVERSE
 
+//Uncomment (and update) if you want to force Node Id
+#define MY_NODE_ID 31
+
 // Flash leds on rx/tx/err
 // Uncomment to override default HW configurations
 #define MY_DEFAULT_ERR_LED_PIN 4  // Error led pin
@@ -95,9 +98,6 @@
 // Enable and select radio type attached 
 #define MY_RADIO_RF24
 
-//Uncomment (and update) if you want to force Node Id
-#define MY_NODE_ID 100
-
 #define MY_BAUD_RATE 38400
 
 // Uncomment the type of sensor in use:
@@ -108,7 +108,7 @@
 #define DHTPOWERPIN       8
 
 // Sleep time between sensor updates (in milliseconds) to add to sensor delay (read from sensor data; typically: 1s)
-static const uint64_t UPDATE_INTERVAL = 60000; 
+static const uint64_t UPDATE_INTERVAL = 10000; 
 
 // Force sending an update of the temperature after n sensor reads, so a controller showing the
 // timestamp of the last update doesn't show something like 3 hours in the unlikely case, that
@@ -118,7 +118,6 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 
 #define CHILD_ID_HUM 11
 #define CHILD_ID_TEMP 12
-#define CHILD_ID_HEATINDEX 13
 
 // Set this offset if the sensors have permanent small offsets to the real temperatures/humidity.
 // In Celsius degrees or moisture percent
@@ -128,7 +127,6 @@ static const uint8_t FORCE_UPDATE_N_READS = 10;
 
 
 // used libraries: they have to be installed by Arduino IDE (menu path: tools - manage libraries)
-#include <MySensors.h>  // *MySensors* by The MySensors Team (tested on version 2.3.2)
 #include <Adafruit_Sensor.h> // Official "Adafruit Unified Sensor" by Adafruit (tested on version 1.1.1)
 #include <DHT_U.h> // Official *DHT Sensor library* by Adafruit (tested on version 1.3.8) 
 
@@ -147,43 +145,7 @@ float heatindex;
 
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
-MyMessage msgHeatIndex(CHILD_ID_HEATINDEX, V_TEMP);
-
-
-
-float computeHeatIndex(float temperature, float percentHumidity) {
-  // Based on Adafruit DHT official library (https://github.com/adafruit/DHT-sensor-library/blob/master/DHT.cpp)
-  // Using both Rothfusz and Steadman's equations
-  // http://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
-
-  float hi;
-
-  temperature = temperature + SENSOR_TEMP_OFFSET; //include TEMP_OFFSET in HeatIndex computation too
-  temperature = 1.8*temperature+32; //convertion to *F
-
-  hi = 0.5 * (temperature + 61.0 + ((temperature - 68.0) * 1.2) + (percentHumidity * 0.094));
-
-  if (hi > 79) {
-    hi = -42.379 +
-             2.04901523 * temperature +
-            10.14333127 * percentHumidity +
-            -0.22475541 * temperature*percentHumidity +
-            -0.00683783 * pow(temperature, 2) +
-            -0.05481717 * pow(percentHumidity, 2) +
-             0.00122874 * pow(temperature, 2) * percentHumidity +
-             0.00085282 * temperature*pow(percentHumidity, 2) +
-            -0.00000199 * pow(temperature, 2) * pow(percentHumidity, 2);
-
-    if((percentHumidity < 13) && (temperature >= 80.0) && (temperature <= 112.0))
-      hi -= ((13.0 - percentHumidity) * 0.25) * sqrt((17.0 - abs(temperature - 95.0)) * 0.05882);
-
-    else if((percentHumidity > 85.0) && (temperature >= 80.0) && (temperature <= 87.0))
-      hi += ((percentHumidity - 85.0) * 0.1) * ((87.0 - temperature) * 0.2);
-  }
-
-  hi = (hi-32)/1.8;
-  return hi; //return Heat Index, in *C
-}
+//MyMessage msgHeatIndex(CHILD_ID_HEATINDEX, V_TEMP);
 
 void presentation()  
 { 
@@ -193,8 +155,6 @@ void presentation()
   present(CHILD_ID_HUM, S_HUM, "Humidity");
   wait(100);                                      //to check: is it needed
   present(CHILD_ID_TEMP, S_TEMP, "Temperature");
-  //wait(100);                                      //to check: is it needed
-  //present(CHILD_ID_HEATINDEX, S_TEMP, "Heat Index");
   metric = getControllerConfig().isMetric;
 }
 
@@ -223,6 +183,7 @@ void setup()
   Serial.print  ("Min Delay:   "); Serial.print(sensor.min_delay/1000); Serial.println(" ms");  
   Serial.println("------------------------------------");
   */
+  
   // Print humidity sensor details.
   dhtu.humidity().getSensor(&sensor);
   /*Serial.println("------------------------------------");
@@ -237,13 +198,13 @@ void setup()
   Serial.println("------------------------------------");
   */
   // Set delay between sensor readings based on sensor details.
-  delayMS = sensor.min_delay / 6000;  
+  delayMS = sensor.min_delay/1000;  
 }
 
 void loop()      
 {  
   digitalWrite(DHTPOWERPIN, HIGH);   
-  delay(delayMS);
+  delay(delayMS+1000);
   sensors_event_t event;  
   // Get temperature event and use its value.
   dhtu.temperature().getEvent(&event);
@@ -276,18 +237,7 @@ void loop()
 if (fabs(humidity - lastHum)>=0.05 || fabs(temperature - lastTemp)>=0.05 || nNoUpdates >= FORCE_UPDATE_N_READS) {
     lastTemp = temperature;
     lastHum = humidity;
-    heatindex = computeHeatIndex(temperature,humidity); //computes Heat Index, in *C
     nNoUpdates = 0; // Reset no updates counter
-    #ifdef MY_DEBUG
-    Serial.print("Heat Index: ");
-    Serial.print(heatindex);
-    Serial.println(" *C");    
-    #endif
-    
-    if (!metric) {
-      temperature = 1.8*temperature+32; //convertion to *F
-      heatindex = 1.8*heatindex+32; //convertion to *F
-    }
     
     #ifdef MY_DEBUG
     wait(100);
@@ -302,21 +252,12 @@ if (fabs(humidity - lastHum)>=0.05 || fabs(temperature - lastTemp)>=0.05 || nNoU
     Serial.print(humidity);
     #endif 
     send(msgHum.set(humidity + SENSOR_HUM_OFFSET, 2));
-
-    #ifdef MY_DEBUG
-    wait(100);
-    Serial.print("Sending HeatIndex: ");
-    Serial.print(heatindex);
-    #endif
-    send(msgHeatIndex.set(heatindex + SENSOR_HEATINDEX_OFFSET, 2));
-
   }
 
   nNoUpdates++;
 
   // Sleep for a while to save energy
   digitalWrite(DHTPOWERPIN, LOW); 
-  wait(300); // waiting for potential presentation requests
+  wait(6000); // waiting for potential presentation requests
   sleep(UPDATE_INTERVAL); 
-
 }

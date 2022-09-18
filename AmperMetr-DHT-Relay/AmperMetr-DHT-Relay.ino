@@ -21,7 +21,7 @@ float vysledek[3];
 // Sleep time between sensor updates (in milliseconds) to add to sensor delay (read from sensor data; typically: 1s)
 static const uint64_t UPDATE_INTERVAL = 6000; 
 static const uint8_t FORCE_UPDATE_N_READS = 40;
-#define CHILD_ID_AMP 1
+#define CHILD_ID_AMP 5
 #define SENSOR_S_POWER 2
 
 // used libraries: they have to be installed by Arduino IDE (menu path: tools - manage libraries)
@@ -34,6 +34,7 @@ static const uint8_t FORCE_UPDATE_N_READS = 40;
 #define NUMBER_OF_RELAYS 1 // Total number of attached relays
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
+bool initialValueSent = false;
 
 //Definice DHT
 #define DHTTYPE DHT11
@@ -65,6 +66,7 @@ float humidity;
 MyMessage msgAmp(CHILD_ID_AMP, V_WATT);
 MyMessage msgHum(CHILD_ID_HUM, V_HUM);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
+MyMessage msg1(1, V_LIGHT);
 
 void before()
 {
@@ -92,7 +94,7 @@ void presentation()
   present(CHILD_ID_AMP, S_POWER, "Sensor");
   for (int sensor=1, pin=RELAY_PIN; sensor<=NUMBER_OF_RELAYS; sensor++, pin++) {
         // Register all sensors to gw (they will be created as child devices)
-        present(sensor, S_BINARY);
+        present(sensor, S_LIGHT, "Vypinac");
     }
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID_HUM, S_HUM, "Humidity");
@@ -103,7 +105,18 @@ void presentation()
 
 
 void loop()      
-{   
+{ 
+//Inicializace Realy pokud ještě neproběhla
+if (!initialValueSent) {
+    Serial.println("Sending initial value");
+    send(msg1.set(loadState(1)?RELAY_OFF:RELAY_ON),true);
+    wait(1000);
+    Serial.println("Sending initial value: Completed");
+    wait(5000);
+    initialValueSent = true;
+  }
+
+//Ampermetr
   for (int i = 0; i < 1; i++){
 
  long lNoSamples=0;
@@ -114,7 +127,7 @@ void loop()
   ADCSRA = 0x87;  // turn on adc, adc-freq = 1/128 of CPU ; keep in min: adc converseion takes 13 ADC clock cycles
   
   if (i == 0)
-  { ADMUX = 0X41;}  // internal 5V reference // PORT-40=A0 41=A1 42=A2, .....
+  { ADMUX = 0X40;}  // internal 5V reference // PORT-40=A0 41=A1 42=A2, .....
   /*else if(i == 1)
   { ADMUX = 0X41;}
   else if(i == 2)
@@ -161,7 +174,10 @@ void loop()
     Serial.println(F("Now sending"));
     Serial.println(vysledek[i]);
 
-    send(msgAmp.set(vysledek[i] + S_POWER, 2));
+    Serial.println(F("S_POWER"));
+    Serial.println(S_POWER);
+
+    send(msgAmp.set(vysledek[i], 2));
     
     // correct offset for next round
     giADCOffset=(int)(giADCOffset+fOffset+0.5f);

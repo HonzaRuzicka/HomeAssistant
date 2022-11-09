@@ -55,7 +55,7 @@ void loop()
   ADCSRA = 0x87;  // turn on adc, adc-freq = 1/128 of CPU ; keep in min: adc converseion takes 13 ADC clock cycles
   
   if (i == 0)
-  { ADMUX = 0X41;}  // internal 5V reference // PORT-40=A0 41=A1 42=A2, .....
+  { ADMUX = 0X40;}  // internal 5V reference // PORT-40=A0 41=A1 42=A2, .....
   /*else if(i == 1)
   { ADMUX = 0X41;}
   else if(i == 2)

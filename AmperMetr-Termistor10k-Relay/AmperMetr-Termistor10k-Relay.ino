@@ -1,7 +1,7 @@
 #define SN "Ampermetr-Termistor10k-Relay"
-#define SV "0.1-51"
+#define SV "0.2-51"
 // Enable debug prints to serial monitor
-#define MY_DEBUG
+//#define MY_DEBUG
 // Enable and select radio type attached 
 #define MY_RADIO_RF24
 // Enable repeater functionality for this node
@@ -12,13 +12,11 @@
 
 #define MY_BAUD_RATE 38400 
 //Define Termistor10k
-#define ntc_pin A1         // Pin,to which the voltage divider is connected
-#define nominal_resistance 10000       //Nominal resistance at 25⁰C
-#define nominal_temeprature 25   // temperature for nominal resistance (almost always 25⁰ C)
-#define samplingrate 5    // Number of samples
-#define beta 3950  // The beta coefficient or the B value of the thermistor (usually 3000-4000) check the datasheet for the accurate value.
-#define Rref 10000   //Value of  resistor used for the voltage divider
-int samples = 0;   //array to store the samples
+int ThermistorPin = 7;
+int Vo;
+float R1 = 10160;
+float logR2, R2, T;
+float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
 //Definice AmperMetr
 float gfLineVoltage = 230.0f;               // typical effective Voltage in Germany
@@ -39,8 +37,8 @@ static const uint8_t FORCE_UPDATE_N_READS = 40;
 //Definice Relay
 #define RELAY_PIN 4  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
 #define NUMBER_OF_RELAYS 1 // Total number of attached relays
-#define RELAY_ON 1  // GPIO value to write to turn on attached relay
-#define RELAY_OFF 0 // GPIO value to write to turn off attached relay
+#define RELAY_ON 0  // GPIO value to write to turn on attached relay
+#define RELAY_OFF 1 // GPIO value to write to turn off attached relay
 bool initialValueSent = false;
 
 #define SENSOR_TEMP_OFFSET 0     // used for temperature data and heat index computation
@@ -96,17 +94,36 @@ if (!initialValueSent) {
     wait(5000);
     initialValueSent = true;
   }
-
+//nejprve si uložím status nastavení ADCSRA (níže ho přenastavuji, tak abych se mohl vrátit zpět)
+byte adcsra_save;
+if (!adcsra_save)
+{
+  adcsra_save = ADCSRA;
+}
+//Termistor10k////////////////////////////////////
+  Vo = analogRead(ThermistorPin);
+  R2 = R1 * (1023.0 / (float)Vo - 1.0);
+  logR2 = log(R2);
+  T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));
+  T = T - 273.15;
+  
+    #ifdef MY_DEBUG
+    wait(100);
+    Serial.print("Sending temperature: ");
+    Serial.print(T);
+    #endif    
+    send(msgTemp.set(T + SENSOR_TEMP_OFFSET, 2));
+    
 //Ampermetr
-  for (int i = 0; i < 1; i++){
+ for (int i = 0; i < 1; i++){
 
  long lNoSamples=0;
  long lCurrentSumSQ = 0;
  long lCurrentSum=0;
 
-  // set-up ADC
+  // set-up ADC - Zde přenastaveuji ADCSRA
   ADCSRA = 0x87;  // turn on adc, adc-freq = 1/128 of CPU ; keep in min: adc converseion takes 13 ADC clock cycles
-  
+
   if (i == 0)
   { ADMUX = 0X40;}  // internal 5V reference // PORT-40=A0 41=A1 42=A2, .....
   /*else if(i == 1)
@@ -138,9 +155,9 @@ if (!initialValueSent) {
     lNoSamples++;
   }
   
-  // stop sampling
-  ADCSRA = 0x00;
-
+  // stop sampling - vracím nastavení ADCSRA na původní úroveň
+  ADCSRA = adcsra_save;
+  
   if (lNoSamples>0)  // if no samples, micros did run over
   {  
     // correct quadradic current sum for offset: Sum((i(t)+o)^2) = Sum(i(t)^2) + 2*o*Sum(i(t)) + o^2*NoSamples
@@ -155,44 +172,13 @@ if (!initialValueSent) {
     Serial.println(F("Now sending"));
     Serial.println(vysledek[i]);
 
-    Serial.println(F("S_POWER"));
-    Serial.println(S_POWER);
-
     send(msgAmp.set(vysledek[i], 2));
     
     // correct offset for next round
     giADCOffset=(int)(giADCOffset+fOffset+0.5f);
   }
   wait(300); // waiting for potential presentation requests
-  //sleep(UPDATE_INTERVAL);
-}
-//Termistor10k////////////////////////////////////
-  uint8_t i;
-  float average;
-  samples = 0;
-  // take voltage readings from the voltage divider
-  for (i = 0; i < samplingrate; i++) {
-    samples += analogRead(ntc_pin);
-    delay(10);
   }
-  average = 0;
-  average = samples / samplingrate;
-  // Calculate NTC resistance
-  average = 1023 / average - 1;
-  average = Rref / average;
-  float temperature;
-  temperature = average / nominal_resistance;     // (R/Ro)
-  temperature = log(temperature);                  // ln(R/Ro)
-  temperature /= beta;                   // 1/B * ln(R/Ro)
-  temperature += 1.0 / (nominal_temeprature + 273.15); // + (1/To)
-  temperature = 1.0 / temperature;                 // Invert
-  temperature -= 273.15;                         // convert absolute temp to C  
-    #ifdef MY_DEBUG
-    wait(100);
-    Serial.print("Sending temperature: ");
-    Serial.print(temperature);
-    #endif    
-    send(msgTemp.set(temperature + SENSOR_TEMP_OFFSET, 2));
 }
 void receive(const MyMessage &message)
 {

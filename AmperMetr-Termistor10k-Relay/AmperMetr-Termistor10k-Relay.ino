@@ -19,6 +19,7 @@ float logR2, R2, T;
 float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
 //Definice AmperMetr
+byte adcsra_save;
 float gfLineVoltage = 230.0f;               // typical effective Voltage in Germany
 float gfACS712_Factor = 50.0f;              // use 50.0f for 20A version, 75.76f for 30A version; 27.03f for 5A version, 29.30f for Grove
 unsigned long gulSamplePeriod_us = 10000000;  // 100ms is 5 cycles at 50Hz and 6 cycles at 60Hz
@@ -95,13 +96,23 @@ if (!initialValueSent) {
     initialValueSent = true;
   }
 //nejprve si uložím status nastavení ADCSRA (níže ho přenastavuji, tak abych se mohl vrátit zpět)
-byte adcsra_save;
 if (!adcsra_save)
 {
   adcsra_save = ADCSRA;
 }
 //Termistor10k////////////////////////////////////
-  Vo = analogRead(ThermistorPin);
+  uint8_t s;
+  float average;
+  int samplingrate = 10;
+  int samples = 0;
+  // take voltage readings from the voltage divider
+  for (s = 0; s < 10; s++) {
+    samples += analogRead(ThermistorPin);
+    delay(20);
+  }
+  average = 0;
+  average = samples / samplingrate;
+  Vo = average;
   R2 = R1 * (1023.0 / (float)Vo - 1.0);
   logR2 = log(R2);
   T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));

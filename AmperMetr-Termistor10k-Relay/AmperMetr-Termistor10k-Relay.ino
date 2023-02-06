@@ -180,9 +180,10 @@ if (!adcsra_save)
     float fCurrentRMS = sqrtf((float)lCurrentSumSQ/(float)lNoSamples) * gfACS712_Factor * gfLineVoltage / 1024;
     vysledek[i] = fCurrentRMS;//gfLineVoltage;
     
+    #ifdef MY_DEBUG
     Serial.println(F("Now sending"));
     Serial.println(vysledek[i]);
-
+    #endif  
     send(msgAmp.set(vysledek[i], 2));
     
     // correct offset for next round

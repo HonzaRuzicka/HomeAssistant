@@ -189,7 +189,7 @@ if (!adcsra_save)
     // correct offset for next round
     giADCOffset=(int)(giADCOffset+fOffset+0.5f);
   }
-  wait(300); // waiting for potential presentation requests
+  wait(60000); // waiting for potential presentation requests
   }
 }
 void receive(const MyMessage &message)

@@ -1,5 +1,5 @@
 {
-    "sketch": "SHT-21_Switch_168\\SHT-21_Switch_168.ino",
+    "sketch": "BatteryMeterInternal\\HA-BatteryMeterInternal.ino",
     "configuration": "cpu=16MHzatmega328",
     "board": "arduino:avr:pro"
 }

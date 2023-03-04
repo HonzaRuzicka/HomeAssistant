@@ -14,22 +14,22 @@
                 "-Wno-error=narrowing"
             ],
             "intelliSenseMode": "gcc-x64",
+            "configurationProvider": "ms-vscode.cpptools",
             "includePath": [
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\variants\\eightanaloginputs",
-                "D:\\hr\\OneDrive\\Dokumenty\\Arduino\\libraries\\MySensors",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\SPI\\src",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\libraries\\Wire\\src",
-                "D:\\hr\\OneDrive\\Dokumenty\\Arduino\\libraries\\tinySHT2x",
                 "c:\\program files (x86)\\arduino\\hardware\\tools\\avr\\lib\\gcc\\avr\\7.3.0\\include",
                 "c:\\program files (x86)\\arduino\\hardware\\tools\\avr\\lib\\gcc\\avr\\7.3.0\\include-fixed",
-                "c:\\program files (x86)\\arduino\\hardware\\tools\\avr\\avr\\include"
+                "c:\\program files (x86)\\arduino\\hardware\\tools\\avr\\avr\\include",
+                "C:\\Users\\hr\\OneDrive - SYSTÉM NET KARLOVY VARY\\Dokumenty\\ArduinoData\\staging\\libraries"
             ],
             "forcedInclude": [
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
             ],
             "cStandard": "c11",
-            "cppStandard": "c++11",
+            "cppStandard": "c++23",
             "defines": [
                 "F_CPU=16000000L",
                 "ARDUINO=10816",

@@ -2,7 +2,8 @@
 //#define MY_DEBUG
 
 #define SN "Battery Meter"
-#define SV "1.2"
+#define SV "1.3"
+int inicializace = 0;
 
 // Enable and select radio type attached
 #define MY_RADIO_RF24
@@ -18,14 +19,18 @@
 #define CHILD_ID_BATT 30
 #define CHILD_ID_VOLTAGE 31
 
-#define SENSOR_BATT_OFFSET 0 
+#define SENSOR_BATT_OFFSET 0
 
 #include <MySensors.h>
-MyMessage msgVoltage(CHILD_ID_VOLTAGE,V_VOLTAGE);
+MyMessage msgVoltage(CHILD_ID_VOLTAGE, V_VOLTAGE);
+MyMessage msgCharge(CHILD_ID_BATT, V_STATUS);
+MyMessage msgBatt(CHILD_ID_BATT, V_PERCENTAGE);
 
-uint32_t SLEEP_TIME = 60000;  // sleep time between reads (seconds * 1000 milliseconds)
+uint32_t SLEEP_TIME = 10000;  // sleep time between reads (seconds * 1000 milliseconds)
 int oldBatteryPcnt = 0;
-#define FULL_BATTERY 3.52 // 3V for 2xAA alkaline. Adjust if you use a different battery setup.
+float max_voltage = 3.48; // volty při 100% baterie
+float min_voltage = 2.83; // volty při 0% baterie
+bool nabijeni = false;
 
 void setup()
 {
@@ -33,32 +38,57 @@ void setup()
 
 void presentation()
 {
-// Send the sketch version information to the gateway
+  // Send the sketch version information to the gateway
   sendSketchInfo(SN, SV);
-  // Register all sensors to gw (they will be created as child devices)
-//  present(CHILD_ID_BATT, S_BATT, "Battery");
-  wait(100);                                      //to check: is it needed
+  //Register all sensors to gw (they will be created as child devices)
+  present(CHILD_ID_BATT, S_DIMMER, "Battery");
+  wait(100);
   present(CHILD_ID_VOLTAGE, S_MULTIMETER, "Volt");
-  wait(100);                                      
+  wait(100);
 }
 
 void loop()
 {
+  if (inicializace == 0) {
+    Serial.print(SN);
+    Serial.print(" ver.: ");
+    Serial.println(SV);
+    Serial.print("SleepTime: ");
+    Serial.print(SLEEP_TIME / 1000);
+    Serial.println(" sekund.");
+    inicializace = 1;
+  }
+
   // get the battery Voltage
-  long batteryMillivolts = hwCPUVoltage();
-  int batteryPcnt = batteryMillivolts / FULL_BATTERY / 1000.0 * 100 + 0.5;
-//#ifdef MY_DEBUG
+  float batteryMillivolts = hwCPUVoltage();
+  float voltynow = batteryMillivolts / 1000.0;
+  int batteryPcnt = ((voltynow - min_voltage) / (max_voltage - min_voltage)) * 100;
+
+  //pokud je při nabíjení má batterie více voltů nastavím to jako 100% - tohle by chtělo ještě nějak dodělat abych mohl nastavit že ne nabíjí.
+  if (batteryPcnt > 100)  {
+    batteryPcnt = 100;
+    nabijeni = true;
+  }
+  else {
+    nabijeni = false;
+  }
+
+
+  //#ifdef MY_DEBUG
   Serial.print("Battery voltage: ");
   Serial.print(batteryMillivolts / 1000.0);
   Serial.println("V");
   Serial.print("Battery percent: ");
   Serial.print(batteryPcnt);
   Serial.println(" %");
-//#endif
-  //if (oldBatteryPcnt != batteryPcnt) {
+  //#endif
+  if (oldBatteryPcnt != batteryPcnt) {
     sendBatteryLevel(batteryPcnt);
     send(msgVoltage.set(batteryMillivolts / 1000.0, 2));
+    send(msgCharge.set(nabijeni));
+    send(msgBatt.set(batteryPcnt));
     oldBatteryPcnt = batteryPcnt;
-  //}
+  }
+  sendHeartbeat();
   sleep(SLEEP_TIME);
 }

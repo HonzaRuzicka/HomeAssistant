@@ -2,7 +2,7 @@
 //#define MY_DEBUG
 
 #define SN "Battery Meter"
-#define SV "1.3"
+#define SV "1.4"
 int inicializace = 0;
 
 // Enable and select radio type attached
@@ -23,10 +23,10 @@ int inicializace = 0;
 
 #include <MySensors.h>
 MyMessage msgVoltage(CHILD_ID_VOLTAGE, V_VOLTAGE);
-MyMessage msgCharge(CHILD_ID_BATT, V_STATUS);
-MyMessage msgBatt(CHILD_ID_BATT, V_PERCENTAGE);
+MyMessage msgCharge(CHILD_ID_BATT, V_VAR1);
+MyMessage msgBatt(CHILD_ID_BATT, V_VAR2);
 
-uint32_t SLEEP_TIME = 10000;  // sleep time between reads (seconds * 1000 milliseconds)
+uint32_t SLEEP_TIME = 300000;  // sleep time between reads (seconds * 1000 milliseconds)
 int oldBatteryPcnt = 0;
 float max_voltage = 3.48; // volty při 100% baterie
 float min_voltage = 2.83; // volty při 0% baterie
@@ -41,7 +41,7 @@ void presentation()
   // Send the sketch version information to the gateway
   sendSketchInfo(SN, SV);
   //Register all sensors to gw (they will be created as child devices)
-  present(CHILD_ID_BATT, S_DIMMER, "Battery");
+  present(CHILD_ID_BATT, S_CUSTOM, "Battery");
   wait(100);
   present(CHILD_ID_VOLTAGE, S_MULTIMETER, "Volt");
   wait(100);

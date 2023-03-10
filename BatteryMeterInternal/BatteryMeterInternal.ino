@@ -2,7 +2,7 @@
 //#define MY_DEBUG
 
 #define SN "Battery Meter"
-#define SV "1.4"
+#define SV "1.5"
 int inicializace = 0;
 
 // Enable and select radio type attached
@@ -21,20 +21,25 @@ int inicializace = 0;
 
 #define SENSOR_BATT_OFFSET 0
 
-#include <MySensors.h>
-MyMessage msgVoltage(CHILD_ID_VOLTAGE, V_VOLTAGE);
-MyMessage msgCharge(CHILD_ID_BATT, V_VAR1);
-MyMessage msgBatt(CHILD_ID_BATT, V_VAR2);
 
-uint32_t SLEEP_TIME = 300000;  // sleep time between reads (seconds * 1000 milliseconds)
+uint32_t SLEEP_TIME = 10000;  // sleep time between reads (seconds * 1000 milliseconds)
 int oldBatteryPcnt = 0;
 float max_voltage = 3.48; // volty při 100% baterie
 float min_voltage = 2.83; // volty při 0% baterie
 bool nabijeni = false;
 
+void before()
+{
+}
+
 void setup()
 {
 }
+
+#include <MySensors.h>
+MyMessage msgVoltage(CHILD_ID_VOLTAGE, V_VOLTAGE);
+MyMessage msgCharge(CHILD_ID_BATT, V_VAR1);
+MyMessage msgBatt(CHILD_ID_BATT, V_VAR2);
 
 void presentation()
 {
@@ -72,8 +77,6 @@ void loop()
   else {
     nabijeni = false;
   }
-
-
   //#ifdef MY_DEBUG
   Serial.print("Battery voltage: ");
   Serial.print(batteryMillivolts / 1000.0);
@@ -89,6 +92,5 @@ void loop()
     send(msgBatt.set(batteryPcnt));
     oldBatteryPcnt = batteryPcnt;
   }
-  sendHeartbeat();
   sleep(SLEEP_TIME);
 }

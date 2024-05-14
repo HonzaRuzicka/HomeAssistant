@@ -1,5 +1,5 @@
 #define SN "Ampermetr-Termistor10k-Relay"
-#define SV "0.2-51"
+#define SV "0.2-52"
 // Enable debug prints to serial monitor
 //#define MY_DEBUG
 // Enable and select radio type attached 
@@ -14,7 +14,7 @@
 //Define Termistor10k
 int ThermistorPin = 7;
 int Vo;
-float R1 = 10160;
+float R1 = 5200;
 float logR2, R2, T;
 float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
 
@@ -37,6 +37,7 @@ static const uint8_t FORCE_UPDATE_N_READS = 40;
 
 //Definice Relay
 #define RELAY_PIN 4  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
+#define RELAY_LED 5
 #define NUMBER_OF_RELAYS 1 // Total number of attached relays
 #define RELAY_ON 0  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 1 // GPIO value to write to turn off attached relay
@@ -44,6 +45,7 @@ bool initialValueSent = false;
 
 #define SENSOR_TEMP_OFFSET 0     // used for temperature data and heat index computation
 #define CHILD_ID_TEMP 4
+#define CHILD_ID_ALERT 6
 
 uint32_t delayMS;
 
@@ -51,6 +53,7 @@ uint32_t delayMS;
 MyMessage msgAmp(CHILD_ID_AMP, V_WATT);
 MyMessage msgTemp(CHILD_ID_TEMP, V_TEMP);
 MyMessage msg1(1, V_LIGHT);
+MyMessage msg(CHILD_ID_ALERT, V_TRIPPED);
 
 void before()
 {
@@ -66,7 +69,8 @@ void setup()
 { 
   sensor_t sensor;
   // Set delay between sensor readings based on sensor details.
-  delayMS = sensor.min_delay / 1000;  
+  delayMS = sensor.min_delay / 1000; 
+  
 }
 
 void presentation()  
@@ -81,6 +85,7 @@ void presentation()
     }
   // Register all sensors to gw (they will be created as child devices)
   present(CHILD_ID_TEMP, S_TEMP, "Temperature");
+  present(CHILD_ID_ALERT, S_DOOR, "Alert");
 }
 
 
@@ -117,6 +122,15 @@ if (!adcsra_save)
   logR2 = log(R2);
   T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));
   T = T - 273.15;
+  
+  if(T > 75){
+    digitalWrite(RELAY_PIN, RELAY_OFF);
+    digitalWrite(RELAY_LED, RELAY_ON);
+    send(msg.set(1)); //Zapnu ALERT
+  }
+  if (T < 65){
+    send(msg.set(0)); //Zapnu ALERT
+  }
   
     #ifdef MY_DEBUG
     wait(100);
@@ -198,6 +212,7 @@ void receive(const MyMessage &message)
     if (message.getType()==V_STATUS) {
         // Change relay state
         digitalWrite(message.getSensor()-1+RELAY_PIN, message.getBool()?RELAY_ON:RELAY_OFF);
+        digitalWrite(message.getSensor()-1+RELAY_LED, message.getBool()?RELAY_OFF:RELAY_ON);
         // Store state in eeprom
         saveState(message.getSensor(), message.getBool());
         // Write some debug info
